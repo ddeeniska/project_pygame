@@ -4,7 +4,6 @@ from asyncio import Event
 import pygame
 import random
 
-
 pygame.init()
 # Настройки экрана
 CELL_SIZE = 30  # Размер одной клетки в пикселях
@@ -14,6 +13,7 @@ screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption('Змейка')
 fps = 10
 clock = pygame.time.Clock()
+
 
 def load_image(name, colorkey=None):  # Загрузка изображений
     fullname = os.path.join('data', name)
@@ -35,32 +35,20 @@ eaten = 1
 length = 0
 
 
-class Player(pygame.sprite.Sprite):  #создание змейки
+class Player(pygame.sprite.Sprite):  # создание змейки
     def __init__(self):
         super().__init__()
         self.head_image = load_image('snake_d.png')  # Начальное изображение
-        self.tail_image = load_image('tail.png')
         self.head_rect = self.head_image.get_rect()
-        self.tail_rect = self.tail_image.get_rect()
         self.head_rect.x = CELL_SIZE * 1  # Начальная позиция X
         self.head_rect.y = CELL_SIZE * 1  # Начальная позиция Y
         self.direction = (0, 1)  # Начальное направление (вниз)
-        self.x = 0
-        self.y = 0
 
     def update(self):  # Обновление позиции игрока в зависимости от направления
-        global length
-        if length == eaten or length == 0:
-            self.x = self.head_rect.x
-            self.y = self.head_rect.y
-        elif length < eaten:
-            pass
+        self.x = self.head_rect.x
+        self.y = self.head_rect.y
         self.head_rect.x += self.direction[0] * CELL_SIZE
         self.head_rect.y += self.direction[1] * CELL_SIZE
-        self.tail_rect.x = self.x
-        self.tail_rect.y = self.y
-        if eaten > length:
-            pass
 
     def turn(self, new_direction):  # Запрет поворота на 180 градусов
         if (self.direction[0] == -new_direction[0] and self.direction[1] == -new_direction[1]):
@@ -70,11 +58,40 @@ class Player(pygame.sprite.Sprite):  #создание змейки
         self.direction = new_direction
 
 
+class Tail(pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__()
+        self.tail_image = load_image('tail.png')
+        self.tail_rect = self.tail_image.get_rect()
+        self.x = 0
+        self.y = 0
+
+    def update(self):
+        global length
+        if length == eaten or length == 0:
+            self.x_prev = self.x
+            self.y_prev = self.y
+            self.x = player.x
+            self.y = player.y
+        elif length < eaten:
+            tail1 = Tail()
+            tail1.x = self.x_prev
+            tail1.y = self.y_prev
+            length += 1
+            screen.blit(tail1.tail_image, tail1.tail_rect)
+
+        self.tail_rect.x = self.x
+        self.tail_rect.y = self.y
+        if eaten > length:
+            pass
+
+
+
 class Food(pygame.sprite.Sprite):  # Класс еды
     def __init__(self):
         super().__init__()
         self.image = load_image('apple.png', 1).convert_alpha()  # Изображение еды (convert_alpha должен
-        self.image = pygame.transform.scale(self.image, (30, 30))              ## убирать белый фон, но не убирает)
+        self.image = pygame.transform.scale(self.image, (30, 30))  ## убирать белый фон, но не убирает)
         self.rect = self.image.get_rect()
         self.randomize_position()
 
@@ -92,9 +109,11 @@ def show_game_over():  # Функция для отображения сообщ
     pygame.display.flip()
     pygame.time.wait(2000)  # Ждем 2 секунды перед выходом
 
+
 def terminate():
     pygame.quit()
     sys.exit()
+
 
 def start_screen():
     fon = pygame.transform.scale(load_image('fon.jpg'), (900, 900))
@@ -109,8 +128,10 @@ def start_screen():
         pygame.display.flip()
         clock.tick(fps)
 
+
 if __name__ == '__main__':
     start_screen()
+    tail = Tail()
     player = Player()  # Создаем игрока
     food = Food()  # Создаем еду
     running = True
@@ -136,7 +157,9 @@ if __name__ == '__main__':
                     if not player.rotate180:  # условие на поворот назад
                         player.head_image = load_image('snake_r.png')
         player.update()  # Обновление позиции игрока
-        if (player.head_rect.x < 0 or player.head_rect.x >= WIDTH or  # Проверка на столкновение с границами игрового поля
+        tail.update()
+        if (
+                player.head_rect.x < 0 or player.head_rect.x >= WIDTH or  # Проверка на столкновение с границами игрового поля
                 player.head_rect.y < 0 or player.head_rect.y >= HEIGHT):
             show_game_over()
             running = False
@@ -148,19 +171,9 @@ if __name__ == '__main__':
             for col in range(GRID_SIZE):
                 screen.blit(grass_image, (col * CELL_SIZE, row * CELL_SIZE))
         screen.blit(player.head_image, player.head_rect)  # Отрисовка змеи
-        screen.blit(player.tail_image, player.tail_rect)
+        screen.blit(tail.tail_image, tail.tail_rect)
         screen.blit(food.image, food.rect)  # Отрисовка еды
         pygame.display.flip()
         clock.tick(fps)
     pygame.quit()
     sys.exit()
-
-
-
-
-
-
-
-
-
-
