@@ -99,8 +99,15 @@ def start_screen():  # стартовый экран (нужно сделать 
         clock.tick(fps)
 
 
+food_count = 2
+food_on_grid = 0
+eaten = True
+eaten2 = True
+first_game = True
+
 if __name__ == '__main__':
     def gameLoop():  # Основная функция игры
+        global food_count, food_on_grid, eaten, eaten2
         start_screen()
         game_over = False
         game_close = False
@@ -111,14 +118,11 @@ if __name__ == '__main__':
         direction = 'RIGHT'  # Начальное направление
         snake_List = []
         Length_of_snake = 5
-        # Генерация еды в случайной позиции
-        foodx = round(random.randrange(0, width - cell_size) / cell_size) * cell_size
-        foody = round(random.randrange(0, height - cell_size) / cell_size) * cell_size
         while not game_over:
             while game_close:
                 fon = pygame.transform.scale(load_image('fon.jpg'), (600, 400))
                 screen.blit(fon, (0, 0))
-                message("Ты проиграл! C - повтор, Q - выход", (255, 255, 0))
+                message("Ты проиграл! ENTER - повтор, Q - выход", (255, 255, 0))
                 your_score(Length_of_snake - 1)
                 pygame.display.update()
                 for event in pygame.event.get():  # проверка ан повтор игры или выход
@@ -126,7 +130,10 @@ if __name__ == '__main__':
                         if event.key == pygame.K_q:
                             game_over = True
                             game_close = False
-                        if event.key == pygame.K_c:
+                        if event.key == pygame.K_RETURN:
+                            food_on_grid = 0
+                            eaten = True
+                            eaten2 = True
                             game_over = True
                             game_close = False
                             gameLoop()
@@ -155,11 +162,39 @@ if __name__ == '__main__':
             x1 += x1_change  # Обновление координат головы змеи
             y1 += y1_change
             draw_grid()  # Рисуем поле
+            if food_count == 1 and eaten:
+                while food_count > food_on_grid:
+                    foodx = round(random.randrange(0, width - cell_size) / cell_size) * cell_size
+                    foody = round(random.randrange(0, height - cell_size) / cell_size) * cell_size
+                    food_on_grid += 1
+                    eaten = False
+            if food_count == 2:
+                while food_count > food_on_grid:
+                    if eaten:
+                        foodx = round(random.randrange(0, width - cell_size) / cell_size) * cell_size
+                        foody = round(random.randrange(0, height - cell_size) / cell_size) * cell_size
+                        food_on_grid += 1
+                        eaten = False
+                    if eaten2:
+                        foodx2 = round(random.randrange(0, width - cell_size) / cell_size) * cell_size
+                        foody2 = round(random.randrange(0, height - cell_size) / cell_size) * cell_size
+                        food_on_grid += 1
+                        eaten2 = False
             screen.blit(food_image, (foodx, foody))  # Рисуем еду
+            if food_count == 2:
+                screen.blit(food_image, (foodx2, foody2))  # Рисуем еду
             if x1 == foodx and y1 == foody:  # Проверка на поедание еды
                 foodx = round(random.randrange(0, width - cell_size) / cell_size) * cell_size
                 foody = round(random.randrange(0, height - cell_size) / cell_size) * cell_size
                 Length_of_snake += 1
+                food_on_grid -= 1
+                eaten = True
+            if x1 == foodx2 and y1 == foody2:  # Проверка на поедание еды
+                foodx2 = round(random.randrange(0, width - cell_size) / cell_size) * cell_size
+                foody2 = round(random.randrange(0, height - cell_size) / cell_size) * cell_size
+                Length_of_snake += 1
+                food_on_grid -= 1
+                eaten2 = True
             # Обновление змейки
             snake_Head = [x1, y1]  # Обновляем координаты головы
             snake_List.insert(0, snake_Head)  # Добавляем голову в начало списка
