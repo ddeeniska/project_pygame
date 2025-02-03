@@ -15,6 +15,7 @@ pygame.display.set_caption('Змейка')
 clock = pygame.time.Clock()
 fps = 8
 
+
 def load_image(name, colorkey=None):  # Загрузка изображений
     fullname = os.path.join('data', name)
     if not os.path.isfile(fullname):
@@ -29,6 +30,7 @@ def load_image(name, colorkey=None):  # Загрузка изображений
     else:
         image = image.convert_alpha()
     return image
+
 
 snake_head_u = load_image('snake_u.png')  # Удобная загрузка изображений
 snake_head_d = load_image('snake_d.png')
@@ -50,10 +52,12 @@ cell_image = pygame.transform.scale(cell_image, (cell_size, cell_size))
 font_style = pygame.font.SysFont("bahnschrift", 25)  # Шрифт для отображения счета
 score_font = pygame.font.SysFont("comicsansms", 35)  # Шрифт для отображения счета
 
+
 def draw_grid():  # отрисовка поля травы
     for x in range(0, width, cell_size):
         for y in range(0, height, cell_size):
             screen.blit(cell_image, (x, y))
+
 
 def our_snake(snake_body_image, snake_list, direction):  # рисование змейки
     head_image = {  # Отображение головы в зависимости от направления
@@ -66,17 +70,21 @@ def our_snake(snake_body_image, snake_list, direction):  # рисование з
         screen.blit(snake_body_image, (x[0], x[1]))
     screen.blit(head_image, (snake_list[0][0], snake_list[0][1]))  # Отображение головы
 
+
 def your_score(score):  # Вывод счёта
     value = score_font.render("Счет: " + str(score), True, (0, 0, 0))
     screen.blit(value, [0, 0])
+
 
 def message(msg, color):  # Вывод сообщений
     mesg = font_style.render(msg, True, color)
     screen.blit(mesg, [width / 6, height / 3])
 
+
 def terminate():
     pygame.quit()
     sys.exit()
+
 
 def start_screen():  # стартовый экран (нужно сделать кнопки старт и выход)
     fon = pygame.transform.scale(load_image('fon.jpg'), (600, 400))
@@ -91,9 +99,52 @@ def start_screen():  # стартовый экран (нужно сделать 
         pygame.display.flip()
         clock.tick(fps)
 
+
+def choose_players_count():
+    fon = pygame.transform.scale(load_image('fon.jpg'), (600, 400))
+    screen.blit(fon, (0, 0))
+    message("Сколько человек будет играть? (1, 2)", (255, 255, 0))
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                terminate()
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_1 or event.key == pygame.K_KP_1:
+                    return 1
+                elif event.key == pygame.K_2 or event.key == pygame.K_KP_2:
+                    return 2
+        pygame.display.flip()
+        clock.tick(fps)
+
+
+def choose_food_count():
+    fon = pygame.transform.scale(load_image('fon.jpg'), (600, 400))
+    screen.blit(fon, (0, 0))
+    message("Выберите количество еды на поле (1, 2)", (255, 255, 0))
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                terminate()
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_1 or event.key == pygame.K_KP_1:
+                    return 1
+                elif event.key == pygame.K_2 or event.key == pygame.K_KP_2:
+                    return 2
+        pygame.display.flip()
+        clock.tick(fps)
+
+
+food_on_grid = 0
+eaten = True
+eaten2 = True
+
+
 if __name__ == '__main__':
     def gameLoop():  # Основная функция игры
+        global food_on_grid, eaten, eaten2
         start_screen()  # Предполагается наличие функции start_screen()
+        player_count = choose_players_count()
+        food_count = choose_food_count()
         game_over = False
         game_close = False
         x1 = width // 2 // cell_size * cell_size  # змейка 1
@@ -111,11 +162,10 @@ if __name__ == '__main__':
         snake_List2 = []
         Length_of_snake2 = 1
         # Генерация еды в случайной позиции
-        foodx = round(random.randrange(0, width - cell_size) / cell_size) * cell_size
-        foody = round(random.randrange(0, height - cell_size) / cell_size) * cell_size
         while not game_over:
             while game_close:
-                fon = pygame.transform.scale(load_image('fon.jpg'), (600, 400))  # Предполагается наличие функции load_image()
+                fon = pygame.transform.scale(load_image('fon.jpg'),
+                                             (600, 400))  # Предполагается наличие функции load_image()
                 screen.blit(fon, (0, 0))
                 message("Ты проиграл! R - повтор, Q - выход", (255, 255, 0))
                 your_score(max(Length_of_snake1 - 1, Length_of_snake2 - 1))  # максимальный счёт
@@ -128,6 +178,9 @@ if __name__ == '__main__':
                         if event.key == pygame.K_r:
                             game_over = True
                             game_close = False
+                            food_on_grid = 0
+                            eaten = True
+                            eaten2 = True
                             gameLoop()
             for event in pygame.event.get():  # Проверка на выход
                 if event.type == pygame.QUIT:
@@ -149,40 +202,79 @@ if __name__ == '__main__':
                         y1_change = cell_size
                         x1_change = 0
                         direction1 = 'DOWN'
-                    if event.key == pygame.K_a and direction2 != 'RIGHT':  # Управление второй змейкой
-                        x2_change = -cell_size
-                        y2_change = 0
-                        direction2 = 'LEFT'
-                    elif event.key == pygame.K_d and direction2 != 'LEFT':
-                        x2_change = cell_size
-                        y2_change = 0
-                        direction2 = 'RIGHT'
-                    elif event.key == pygame.K_w and direction2 != 'DOWN':
-                        y2_change = -cell_size
-                        x2_change = 0
-                        direction2 = 'UP'
-                    elif event.key == pygame.K_s and direction2 != 'UP':
-                        y2_change = cell_size
-                        x2_change = 0
-                        direction2 = 'DOWN'
+                    if player_count == 2:
+                        if event.key == pygame.K_a and direction2 != 'RIGHT':  # Управление второй змейкой
+                            x2_change = -cell_size
+                            y2_change = 0
+                            direction2 = 'LEFT'
+                        elif event.key == pygame.K_d and direction2 != 'LEFT':
+                            x2_change = cell_size
+                            y2_change = 0
+                            direction2 = 'RIGHT'
+                        elif event.key == pygame.K_w and direction2 != 'DOWN':
+                            y2_change = -cell_size
+                            x2_change = 0
+                            direction2 = 'UP'
+                        elif event.key == pygame.K_s and direction2 != 'UP':
+                            y2_change = cell_size
+                            x2_change = 0
+                            direction2 = 'DOWN'
             if x1 >= width or x1 < 0 or y1 >= height or y1 < 0:  # Проверка на выход за рамки для змейки 1
                 game_close = True
             x1 += x1_change  # Обновление координат головы змейки 1
             y1 += y1_change
-            if x2 >= width or x2 < 0 or y2 >= height or y2 < 0:  # Проверка на выход за рамки для змейки 2
-                game_close = True
-            x2 += x2_change  # Обновление координат головы змейки 2
-            y2 += y2_change
+            if player_count == 2:
+                if x2 >= width or x2 < 0 or y2 >= height or y2 < 0:  # Проверка на выход за рамки для змейки 2
+                    game_close = True
+                x2 += x2_change  # Обновление координат головы змейки 2
+                y2 += y2_change
             draw_grid()  # Рисуем поле
+            if food_count == 1 and eaten:
+                while food_count > food_on_grid:
+                    foodx = round(random.randrange(0, width - cell_size) / cell_size) * cell_size
+                    foody = round(random.randrange(0, height - cell_size) / cell_size) * cell_size
+                    food_on_grid += 1
+                    eaten = False
+            elif food_count == 2:
+                while food_count > food_on_grid:
+                    if eaten:
+                        foodx = round(random.randrange(0, width - cell_size) / cell_size) * cell_size
+                        foody = round(random.randrange(0, height - cell_size) / cell_size) * cell_size
+                        food_on_grid += 1
+                        eaten = False
+                    if eaten2:
+                        foodx2 = round(random.randrange(0, width - cell_size) / cell_size) * cell_size
+                        foody2 = round(random.randrange(0, height - cell_size) / cell_size) * cell_size
+                        food_on_grid += 1
+                        eaten2 = False
             screen.blit(food_image, (foodx, foody))  # Рисуем еду
-            if x1 == foodx and y1 == foody:  # Проверка на поедание еды первой змейкой
+            if food_count == 2:
+                screen.blit(food_image, (foodx2, foody2))  # Рисуем еду  # Рисуем еду
+            if x1 == foodx and y1 == foody:  # Проверка на поедание еды
                 foodx = round(random.randrange(0, width - cell_size) / cell_size) * cell_size
                 foody = round(random.randrange(0, height - cell_size) / cell_size) * cell_size
                 Length_of_snake1 += 1
-            if x2 == foodx and y2 == foody:  # Проверка на поедание еды второй змейкой
-                foodx = round(random.randrange(0, width - cell_size) / cell_size) * cell_size
-                foody = round(random.randrange(0, height - cell_size) / cell_size) * cell_size
-                Length_of_snake2 += 1
+                food_on_grid -= 1
+                eaten = True
+            if x1 == foodx2 and y1 == foody2:  # Проверка на поедание еды
+                foodx2 = round(random.randrange(0, width - cell_size) / cell_size) * cell_size
+                foody2 = round(random.randrange(0, height - cell_size) / cell_size) * cell_size
+                Length_of_snake1 += 1
+                food_on_grid -= 1
+                eaten2 = True
+            if player_count == 2:
+                if x2 == foodx and y2 == foody:  # Проверка на поедание еды
+                    foodx = round(random.randrange(0, width - cell_size) / cell_size) * cell_size
+                    foody = round(random.randrange(0, height - cell_size) / cell_size) * cell_size
+                    Length_of_snake2 += 1
+                    food_on_grid -= 1
+                    eaten = True
+                if x2 == foodx2 and y2 == foody2:  # Проверка на поедание еды
+                    foodx2 = round(random.randrange(0, width - cell_size) / cell_size) * cell_size
+                    foody2 = round(random.randrange(0, height - cell_size) / cell_size) * cell_size
+                    Length_of_snake2 += 1
+                    food_on_grid -= 1
+                    eaten2 = True
             # Обновление змейки 1
             snake_Head1 = [x1, y1]  # Обновляем координаты головы
             snake_List1.insert(0, snake_Head1)  # Добавляем голову в начало списка
@@ -193,15 +285,16 @@ if __name__ == '__main__':
                     game_close = True
             our_snake(snake_body_image, snake_List1, direction1)
             # Обновление змейки 2
-            snake_Head2 = [x2, y2]  # Обновляем координаты головы
-            snake_List2.insert(0, snake_Head2)  # Добавляем голову в начало списка
-            if len(snake_List2) > Length_of_snake2:  # Удаляем последний хвост, если длина змеи больше необходимой
-                del snake_List2[-1]  # Удаляем последний элемент из конца списка
-            for x in snake_List2[1:]:  # Проверка на столкновение с телом змеи (без головы)
-                if x == snake_Head2:
-                    game_close = True
-            our_snake(snake_body_image2, snake_List2, direction2)
-            your_score(max(Length_of_snake1 - 1, Length_of_snake2 - 1)) # Вызов функции счета
+            if player_count == 2:
+                snake_Head2 = [x2, y2]  # Обновляем координаты головы
+                snake_List2.insert(0, snake_Head2)  # Добавляем голову в начало списка
+                if len(snake_List2) > Length_of_snake2:  # Удаляем последний хвост, если длина змеи больше необходимой
+                    del snake_List2[-1]  # Удаляем последний элемент из конца списка
+                for x in snake_List2[1:]:  # Проверка на столкновение с телом змеи (без головы)
+                    if x == snake_Head2:
+                        game_close = True
+                our_snake(snake_body_image2, snake_List2, direction2)
+            your_score(max(Length_of_snake1 - 1, Length_of_snake2 - 1))  # Вызов функции счета
             pygame.display.update()
             clock.tick(fps)
 
