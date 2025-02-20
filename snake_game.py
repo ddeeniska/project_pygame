@@ -191,9 +191,9 @@ def choose_difficulty():
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 mouse = pygame.mouse.get_pos()
                 print(mouse[0], mouse[1])
-                if 180 < mouse[0] < 226 and 240 < mouse[1] < 280:
+                if 150 < mouse[0] < 250 and 240 < mouse[1] < 280:
                     return 5
-                elif 380 < mouse[0] < 426 and 240 < mouse[1] < 280:
+                elif 340 < mouse[0] < 460 and 240 < mouse[1] < 280:
                     return 9
                 elif 500 < mouse[0] < 590 and 350 < mouse[1] < 390:
                     terminate()
